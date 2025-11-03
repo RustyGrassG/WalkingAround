@@ -38,10 +38,11 @@ class main():
 
         self.objects = []
 
-        for i in range(200):
+        for i in range(400):
             x = uniform(-100.0, 100.0)
             y = uniform(-100.0, 100.0)
             z = uniform(-100.0, 100.0)
+            #Set Cube stats here! Only size, position, and color works
             self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = .25))
         
 
@@ -53,24 +54,22 @@ class main():
         self.viewMatrix = OGL.glGetFloatv(OGL.GL_MODELVIEW_MATRIX)
         OGL.glLoadIdentity()
 
+        #The center of the display window overlay
         self.displayCenter = [self.display[0] // 2, self.display[1] // 2]
-        self.mouseMove = [0,0]
         pygame.mouse.set_pos(self.displayCenter)
 
+        #The up down angle used for camera rotation. Needs to be clamped still
         self.up_down_angle = 0.0
 
+        #Set up player object
         self.player = entities.Player()
-
-        #self.player_pos = [0.0, 0.0, 0.0]
-        #self.player_stats = {
-        #    "walk_speed" : 10.0,
-        #    "camera_sensitivity" : 2.0
-        #}
         
 
     def run(self):
         while True:
+            #Delta time... dont think this is how it works IRL, will probably have to use FPS to make it work
             dt = self.clock.tick(60) / 1000
+            print(self.clock.get_fps())
             for event in pygame.event.get():
                 if event.type == pylocals.QUIT:
                     pygame.quit()
@@ -110,8 +109,10 @@ class main():
             
             #refreshes the screen each tick
             OGL.glClear(OGL.GL_COLOR_BUFFER_BIT | OGL.GL_DEPTH_BUFFER_BIT)
+            OGL.glBegin(OGL.GL_QUADS)
             for game_object in self.objects:
                 game_object.draw(self.player.pos)
+            OGL.glEnd()
             pygame.display.flip()
             
 

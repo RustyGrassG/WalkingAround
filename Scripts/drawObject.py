@@ -49,7 +49,7 @@ class Cube(GameObject):
     
     def draw(self, player_pos: tuple):
         #Quads
-        GL.glBegin(GL.GL_QUADS)
+        #GL.glBegin(GL.GL_QUADS)
         for surface in self.surfaces:
             x = 0
             for vertex in surface:
@@ -58,7 +58,7 @@ class Cube(GameObject):
                 GL.glColor3fv(self.color)
                 GL.glVertex3fv(updated_vert_pos)
                 #print(updated_vert_pos)
-        GL.glEnd()
+        #GL.glEnd()
         #Lines
         if self.show_edges:
             print("debug")

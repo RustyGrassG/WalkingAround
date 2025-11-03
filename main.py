@@ -1,9 +1,14 @@
-import drawObject
+import sys
+import Scripts
 import pygame
-from pygame import locals as pylocals
+import math
+from random import uniform
 import OpenGL.GL as OGL
 import OpenGL.GLU as OGLU
-import math
+import Scripts.drawObject as drawObject, Scripts.entities as entities
+from pygame import locals as pylocals
+
+
 
 class main():
     def __init__(self):
@@ -31,19 +36,17 @@ class main():
         OGL.glLightfv(OGL.GL_LIGHT0, OGL.GL_AMBIENT, [0.5, 0.5, 0.5, 1])
         OGL.glLightfv(OGL.GL_LIGHT0, OGL.GL_AMBIENT, [1.0, 1.0, 1.0, 1])
 
-        cube_1 = drawObject.Cube(pos=(3, 10, -5), color=(.5,.3,.5))
-        cube_2 = drawObject.Cube(pos=(0, -2, -5), color=(.1,.7,.0))
-        cube_3 = drawObject.Cube(pos=(3, 4, -5), color=(.2,.3,.5))
-        cube_4 = drawObject.Cube(pos=(-10.0, 0, -5.0), color=(.3,.2,.3))
-        self.objects = [
-            cube_1,
-            cube_2,
-            cube_3,
-            cube_4
-        ]
+        self.objects = []
+
+        for i in range(200):
+            x = uniform(-100.0, 100.0)
+            y = uniform(-100.0, 100.0)
+            z = uniform(-100.0, 100.0)
+            self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = .25))
+        
 
         OGL.glMatrixMode(OGL.GL_PROJECTION)
-        OGLU.gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 50.0)
+        OGLU.gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 150.0)
 
         OGL.glMatrixMode(OGL.GL_MODELVIEW)
         OGLU.gluLookAt(0, -8, 0, 0, 0, 0, 0, 0, 1)
@@ -56,11 +59,13 @@ class main():
 
         self.up_down_angle = 0.0
 
-        self.player_pos = [0.0, 0.0, 0.0]
-        self.player_stats = {
-            "walk_speed" : 10.0,
-            "camera_sensitivity" : 2.0
-        }
+        self.player = entities.Player()
+
+        #self.player_pos = [0.0, 0.0, 0.0]
+        #self.player_stats = {
+        #    "walk_speed" : 10.0,
+        #    "camera_sensitivity" : 2.0
+        #}
         
 
     def run(self):
@@ -80,29 +85,20 @@ class main():
             
             OGL.glLoadIdentity()
 
-            if dx or dy:
-                dx *= self.player_stats["camera_sensitivity"] * dt
-                dy *= self.player_stats["camera_sensitivity"] * dt
-                pygame.mouse.set_pos(self.displayCenter)
+            #if dx or dy:
+                #sensitivity = self.player.stats["mouse_sensitivity"]
+                #dx *= sensitivity * dt
+                #dy *= sensitivity * dt
+                
+                
 
             OGL.glLoadIdentity()
-
-            self.up_down_angle += dy
-            OGL.glRotatef(self.up_down_angle, 1.0, 0.0, 0.0)
+            self.player.update_camera(dx, dy, self.displayCenter, dt)
 
             OGL.glPushMatrix()
             OGL.glLoadIdentity()
 
-            if key_presses[pygame.K_a]:
-                self.player_pos[0] += self.player_stats["walk_speed"] * dt
-            if key_presses[pygame.K_d]:
-                self.player_pos[0] -= self.player_stats["walk_speed"] * dt
-            if key_presses[pygame.K_w]:
-                self.player_pos[1] -= self.player_stats["walk_speed"] * dt
-            if key_presses[pygame.K_s]:
-                self.player_pos[1] += self.player_stats["walk_speed"] * dt
-
-            OGL.glRotatef(dx, 0.0, 1.0, 0.0)
+            self.player.update_pos(key_presses, dt)
 
             OGL.glMultMatrixf(self.viewMatrix)
             self.viewMatrix = OGL.glGetFloatv(OGL.GL_MODELVIEW_MATRIX)
@@ -115,7 +111,7 @@ class main():
             #refreshes the screen each tick
             OGL.glClear(OGL.GL_COLOR_BUFFER_BIT | OGL.GL_DEPTH_BUFFER_BIT)
             for game_object in self.objects:
-                game_object.draw(self.player_pos)
+                game_object.draw(self.player.pos)
             pygame.display.flip()
             
 

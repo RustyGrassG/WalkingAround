@@ -97,57 +97,9 @@ class main():
         self.ui_layer.blit(self.fps_count_text, (10, 50))
         
         
-    def surf_to_texture(self, surface, texID):
-        width, height = surface.get_size()
-        surface_array = pygame.surfarray.pixels3d(surface)
-        surface_array = np.flipud(surface_array)
-        rgb_surface = surface_array.swapaxes(0, 1).astype(np.uint8).tobytes()
-        flipped_surf = pygame.transform.flip(surface, False, True)
-        texture_data = pygame.image.tobytes(flipped_surf, "RGBA", True)
+    
 
-        glBindTexture(GL_TEXTURE_2D, texID)
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture_data)
-        glBindTexture(GL_TEXTURE_2D, 0)
-
-    def draw_ui_overlay(self):
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0, self.display[0], self.display[1], 0, -1, 1)
-
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
-
-        glDisable(GL_DEPTH_TEST)
-        glDisable(GL_LIGHTING)
-        glColor3f(1.0, 1.0, 1.0)
-
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D, self.ui_texture)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        # Draw a rectangle in screen space
-        glBegin(GL_QUADS)
-        glTexCoord2f(0, 0); glVertex2f(0, 0)
-        glTexCoord2f(1, 0); glVertex2f(self.display[0], 0)
-        glTexCoord2f(1, 1); glVertex2f(self.display[0], self.display[1])
-        glTexCoord2f(0, 1); glVertex2f(0, self.display[1])
-        glEnd()
-
-        glBindTexture(GL_TEXTURE_2D, 0)
-        glDisable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
-
-        glEnable(GL_LIGHTING)
-        glEnable(GL_DEPTH_TEST)
-
-        # restore projection + modelview
-        glPopMatrix()
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-        glMatrixMode(GL_MODELVIEW)
+    
 
     def run(self):
         fps_tick = 0
@@ -217,7 +169,7 @@ class main():
             
             #refreshes the screen each tick
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            self.surf_to_texture(self.ui_layer, self.ui_texture)
+            utils.surf_to_texture(self.ui_layer, self.ui_texture)
             glBegin(GL_QUADS)
             for game_object in self.objects:
                 game_object.draw(self.player.pos)
@@ -226,7 +178,7 @@ class main():
             glBindTexture(GL_TEXTURE_2D, 1)
             #pygame.display.get_surface().blit(self.text, self.displayCenter)
             #self.screen.blit(self.text, self.displayCenter)
-            self.draw_ui_overlay()
+            utils.draw_ui_overlay(self.display, self.ui_texture)
             pygame.display.flip()
             
 

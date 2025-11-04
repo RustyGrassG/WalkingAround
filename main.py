@@ -5,7 +5,7 @@ import math
 from random import uniform
 from OpenGL.GL import  *
 from OpenGL.GLU import *
-import Scripts.drawObject as drawObject, Scripts.entities as entities
+import Scripts.drawObject as drawObject, Scripts.entities as entities, Scripts.utils as utils
 from pygame import locals as pylocals
 import numpy as np
 
@@ -24,28 +24,22 @@ class main():
 
         #Sets up the clock for in-game time management
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font(pygame.font.get_default_font(), 50)
-        self.text = "None"
-        self.text = self.font.render("Cubes: " , False, (255, 255, 255))
+        self.font = pygame.font.Font(pygame.font.get_default_font(), 30)
+        self.cube_count_text = self.font.render("Cubes: " , False, (255, 255, 255))
+        self.fps_count_text = self.font.render("FPS: " , False, (255, 255, 255))
 
         #Sets display window size and buffering - Allows OpenGL to render properly to the screen
         self.display = (800,600)
         self.screen = pygame.display.set_mode(self.display, pylocals.DOUBLEBUF | pylocals.OPENGL)
+
+        #The UI layer overlay for the screen
         self.ui_layer = pygame.Surface(self.display, pygame.SRCALPHA)
         self.ui_layer.fill((0,0,0, 0))
-        self.ui_layer.blit(self.text, (10,10))
+        self.ui_layer.blit(self.cube_count_text, (10,10))
         self.ui_texture = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, self.ui_texture)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.display[0], self.display[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glBindTexture(GL_TEXTURE_2D, 0)
-        
-
-        #Setting the pygame font for writting things on screen
-        #print(pygame.font.get_fonts())
-        
+        utils.alpha_surf_to_gl(self.ui_layer, self.ui_texture)
+    
+        self.avg_fps = 0
         
         
         
@@ -59,11 +53,8 @@ class main():
         glLightfv(GL_LIGHT0, GL_AMBIENT, [0.5, 0.5, 0.5, 1])
         glLightfv(GL_LIGHT0, GL_AMBIENT, [1.0, 1.0, 1.0, 1])
 
+        #Holds all the objects in the world
         self.objects = []
-
-        if self.debug:
-            self.avg_fps = 0
-            self.fps_tick = 0
 
         for i in range(0):
             x = uniform(-100.0, 100.0)
@@ -71,7 +62,7 @@ class main():
             z = uniform(-100.0, 100.0)
             #Set Cube stats here! Only size, position, and color works
             self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
-        self.update_cube_count()
+        self.update_UI()
 
         glMatrixMode(GL_PROJECTION)
         gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 150.0)
@@ -91,12 +82,20 @@ class main():
         #Set up player object
         self.player = entities.Player()
         
+        self.a_surf_refresh_list = []
 
-    def update_cube_count(self):
+    #Testing Function will probably get deleted
+    def update_UI(self):
         self.ui_layer.fill((0,0,0,0))
-        self.text = self.font.render("Cubes: " + str(len(self.objects)), True, (255, 255, 255))
-        self.ui_layer.blit(self.text, (10,10))
-        #self.text_data = pygame.image.tobytes(self.text, "RGBA", True)
+
+        #Adds the current cube count to the screen UI
+        self.cube_count_text = self.font.render("Cubes: " + str(len(self.objects)), True, (255, 255, 255))
+        self.ui_layer.blit(self.cube_count_text, (10,10))
+
+        #Adds the current FPS to the screen UI
+        self.fps_count_text = self.font.render(f"FPS: {round(self.avg_fps)}" , False, (255, 255, 255))
+        self.ui_layer.blit(self.fps_count_text, (10, 50))
+        
         
     def surf_to_texture(self, surface, texID):
         width, height = surface.get_size()
@@ -151,17 +150,24 @@ class main():
         glMatrixMode(GL_MODELVIEW)
 
     def run(self):
+        fps_tick = 0
+        avg_fps = 0
         while True:
+            #Used to refresh surfaces other than OGL surfaces
+            #utils.alpha_refresh_surf(self.a_surf_refresh_list)
+
             #Delta time... dont think this is how it works IRL, will probably have to use FPS to make it work
             dt = self.clock.tick(60) / 1000
             if self.debug:
-                self.avg_fps += self.clock.get_fps()
-                self.fps_tick += 1
-                avg_fps = self.avg_fps / self.fps_tick
+                avg_fps += self.clock.get_fps()
+                fps_tick += 1
+                collective_avg_fps = avg_fps / fps_tick
                 print("Average FPS: " + str(avg_fps))
-                if self.fps_tick >= 60:
-                    self.avg_fps = avg_fps
-                    self.fps_tick = 1
+                if fps_tick >= 60:
+                    avg_fps = collective_avg_fps
+                    self.avg_fps = collective_avg_fps
+                    fps_tick = 1
+                    self.update_UI()
                     
                 
             for event in pygame.event.get():
@@ -178,7 +184,7 @@ class main():
                         z = uniform(-100.0, 100.0)
                         #Set Cube stats here! Only size, position, and color works
                         self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
-                        self.update_cube_count()
+                        self.update_UI()
 
             key_presses = pygame.key.get_pressed()
             dx, dy = pygame.mouse.get_rel()

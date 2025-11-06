@@ -114,7 +114,6 @@ class main():
                 avg_fps += self.clock.get_fps()
                 fps_tick += 1
                 collective_avg_fps = avg_fps / fps_tick
-                print("Average FPS: " + str(avg_fps))
                 if fps_tick >= 60:
                     avg_fps = collective_avg_fps
                     self.avg_fps = collective_avg_fps

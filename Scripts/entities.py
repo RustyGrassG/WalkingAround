@@ -24,6 +24,7 @@ class Player():
         dx *= sensitivity * dt
         dy *= sensitivity * dt
         self.up_down_angle += dy
+        self.up_down_angle = max(-89, min(89, self.up_down_angle))
         self.left_right_angle += dx
         OGL.glRotatef(self.up_down_angle, 1.0, 0.0, 0.0)
         OGL.glRotatef(self.left_right_angle, 0.0, 1.0, 0.0)

@@ -27,6 +27,7 @@ class main():
         self.font = pygame.font.Font(pygame.font.get_default_font(), 30)
         self.cube_count_text = self.font.render("Cubes: " , False, (255, 255, 255))
         self.fps_count_text = self.font.render("FPS: " , False, (255, 255, 255))
+        self.space_to_summon_cube = self.font.render("PRESS SPACE TO SUMMON CUBE",  False, (255,255,255))
 
         #Sets display window size and buffering - Allows OpenGL to render properly to the screen
         self.display = (800,600)
@@ -66,7 +67,7 @@ class main():
             #Set Cube stats here! Only size, position, and color works
             #self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
             self.objects.append(drawObject.Cube(pos = (x_pos * 10, y_pos * 10, 0), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.75, 1.0)))
-        self.update_UI()
+        
 
         glMatrixMode(GL_PROJECTION)
         gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 150.0)
@@ -87,6 +88,7 @@ class main():
         self.player = entities.Player()
         
         self.a_surf_refresh_list = []
+        self.update_UI()
 
     #Testing Function will probably get deleted
     def update_UI(self):
@@ -100,6 +102,8 @@ class main():
         self.fps_count_text = self.font.render(f"FPS: {round(self.avg_fps)}" , False, (255, 255, 255))
         self.ui_layer.blit(self.fps_count_text, (10, 50))
         
+        self.space_to_summon_cube = self.font.render("PRESS SPACE TO SUMMON CUBE",  False, (255,255,255))
+        self.ui_layer.blit(self.space_to_summon_cube, (50, self.displayCenter[1] * 2 - 50))
         
     
 

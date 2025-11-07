@@ -30,12 +30,35 @@ class Player():
         OGL.glRotatef(self.left_right_angle, 0.0, 1.0, 0.0)
     
     def update_pos(self, keys, dt):
+        #Takes the horizontal(yaw) camera angle, in degrees, and converts it to radians
+        rot_radians = math.radians(self.left_right_angle)
+
+        #Gets the forward and right vector movements
+        forward = [math.sin(rot_radians), math.cos(rot_radians)]
+        right = [math.cos(rot_radians), -math.sin(rot_radians)]
+
+        #gets the player walk speed from dic
         speed = self.stats["walk_speed"]
-        if keys[pygame.K_a]:
-            self.pos[0] += speed * dt
-        if keys[pygame.K_d]:
-            self.pos[0] -= speed * dt
+        move_dir = [0, 0]
         if keys[pygame.K_w]:
-            self.pos[1] -= speed * dt
+            move_dir[0] += forward[0]
+            move_dir[1] += forward[1]
         if keys[pygame.K_s]:
-            self.pos[1] += speed * dt
+            move_dir[0] -= forward[0]
+            move_dir[1] -= forward[1]
+        if keys[pygame.K_d]:
+            move_dir[0] += right[0]
+            move_dir[1] += right[1]
+        if keys[pygame.K_a]:
+            move_dir[0] -= right[0]
+            move_dir[1] -= right[1]
+        
+        #Normalizes the walk speed (makes a 0-1 value)
+        move_norm = math.hypot(move_dir[0], move_dir[1])
+        if move_norm:
+            move_dir[0] /= move_norm
+            move_dir[1] /= move_norm
+
+        #Adds ton position
+        self.pos[0] += move_dir[0] * speed * dt
+        self.pos[1] += move_dir[1] * speed * dt

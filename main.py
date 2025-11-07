@@ -56,19 +56,23 @@ class main():
         #Holds all the objects in the world
         self.objects = []
 
-        for i in range(0):
+        for i in range(1,5):
             x = uniform(-100.0, 100.0)
             y = uniform(-100.0, 100.0)
             z = uniform(-100.0, 100.0)
+            pos_i = (math.pi * 2) / 4 * i
+            x_pos = math.cos(pos_i)
+            y_pos = math.sin(pos_i)
             #Set Cube stats here! Only size, position, and color works
-            self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
+            #self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
+            self.objects.append(drawObject.Cube(pos = (x_pos * 10, y_pos * 10, 0), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.75, 1.0)))
         self.update_UI()
 
         glMatrixMode(GL_PROJECTION)
         gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 150.0)
 
         glMatrixMode(GL_MODELVIEW)
-        gluLookAt(0, -8, 0, 0, 0, 0, 0, 0, 1)
+        gluLookAt(0, .01, 0, 0, 0, 0, 0, 0, .01)
         self.viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
         glLoadIdentity()
 

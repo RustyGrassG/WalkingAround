@@ -47,14 +47,14 @@ class Cube(GameObject):
             (4,0,3,6)
         )
     
-    def draw(self, player_pos: tuple):
+    def draw(self):
         #Quads
         #GL.glBegin(GL.GL_QUADS)
         for surface in self.surfaces:
             x = 0
             for vertex in surface:
                 x += 1
-                updated_vert_pos = (self.vertices[vertex][0] + self.pos[0] + player_pos[0], self.vertices[vertex][1] + self.pos[1]  + player_pos[1], self.vertices[vertex][2] + self.pos[2]  + player_pos[2])
+                updated_vert_pos = (self.vertices[vertex][0] + self.pos[0], self.vertices[vertex][1] + self.pos[1] , self.vertices[vertex][2] + self.pos[2])
                 GL.glColor3fv(self.color)
                 GL.glVertex3fv(updated_vert_pos)
                 #print(updated_vert_pos)
@@ -66,7 +66,7 @@ class Cube(GameObject):
             for edge in self.edges:
                 x = 0
                 for vertice in edge:
-                    updated_vert_pos = (vertice + player_pos[x], vertice + player_pos[x], vertice + player_pos[x])
+                    updated_vert_pos = (vertice, vertice, vertice)
                     GL.glVertex3fv(updated_vert_pos)
                     x += 1
             GL.glEnd()

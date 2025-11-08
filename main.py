@@ -42,7 +42,8 @@ class main():
     
         self.avg_fps = 0
         
-        
+        #Set up player object
+        self.player = entities.Player()
         
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
@@ -70,13 +71,14 @@ class main():
         
 
         glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 150.0)
+        gluPerspective(45, (self.display[0]/self.display[1]), 0.1, 280.0)
 
         glMatrixMode(GL_MODELVIEW)
         gluLookAt(0, .01, 0, 0, 0, 0, 0, 0, .01)
         self.viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
+        
+        
         glLoadIdentity()
-
         #The center of the display window overlay
         self.displayCenter = [self.display[0] // 2, self.display[1] // 2]
         pygame.mouse.set_pos(self.displayCenter)
@@ -84,8 +86,7 @@ class main():
         #The up down angle used for camera rotation. Needs to be clamped still
         self.up_down_angle = 0.0
 
-        #Set up player object
-        self.player = entities.Player()
+        
         
         self.a_surf_refresh_list = []
         self.update_UI()
@@ -104,6 +105,7 @@ class main():
         
         self.space_to_summon_cube = self.font.render("PRESS SPACE TO SUMMON CUBE",  False, (255,255,255))
         self.ui_layer.blit(self.space_to_summon_cube, (50, self.displayCenter[1] * 2 - 50))
+        utils.surf_to_texture(self.ui_layer, self.ui_texture)
         
     
 
@@ -162,6 +164,7 @@ class main():
 
             glPushMatrix()
             glLoadIdentity()
+            
 
             self.player.update_pos(key_presses, dt)
 
@@ -176,10 +179,10 @@ class main():
             
             #refreshes the screen each tick
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            utils.surf_to_texture(self.ui_layer, self.ui_texture)
+            
             glBegin(GL_QUADS)
             for game_object in self.objects:
-                game_object.draw(self.player.pos)
+                game_object.draw()
             glEnd()
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, 1)

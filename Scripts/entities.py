@@ -10,14 +10,15 @@ import OpenGL.GLU as OGLU
 
 class Player():
     def __init__(self, pos : list = [0.0, 0.0, 0.0]):
-        self.pos = pos
         self.stats = {
             "walk_speed" : 10.0,
+            "height" : -100.0,
             "mouse_sensitivity": 8.0
         }
         self.up_down_angle = 0.0
         self.left_right_angle = 0.0
         self.viewMatrix = OGL.glGetFloatv(OGL.GL_MODELVIEW_MATRIX)
+        
     
     def update_camera(self, dx, dy, center, dt):
         sensitivity = self.stats["mouse_sensitivity"]
@@ -34,8 +35,8 @@ class Player():
         rot_radians = math.radians(self.left_right_angle)
 
         #Gets the forward and right vector movements
-        forward = [math.sin(rot_radians), math.cos(rot_radians)]
-        right = [math.cos(rot_radians), -math.sin(rot_radians)]
+        forward = [-math.sin(rot_radians), math.cos(rot_radians)]
+        right = [math.cos(rot_radians), math.sin(rot_radians)]
 
         #gets the player walk speed from dic
         speed = self.stats["walk_speed"]
@@ -47,11 +48,11 @@ class Player():
             move_dir[0] -= forward[0]
             move_dir[1] -= forward[1]
         if keys[pygame.K_d]:
-            move_dir[0] += right[0]
-            move_dir[1] += right[1]
-        if keys[pygame.K_a]:
             move_dir[0] -= right[0]
             move_dir[1] -= right[1]
+        if keys[pygame.K_a]:
+            move_dir[0] += right[0]
+            move_dir[1] += right[1]
         
         #Normalizes the walk speed (makes a 0-1 value)
         move_norm = math.hypot(move_dir[0], move_dir[1])
@@ -59,6 +60,4 @@ class Player():
             move_dir[0] /= move_norm
             move_dir[1] /= move_norm
 
-        #Adds ton position
-        self.pos[0] += move_dir[0] * speed * dt
-        self.pos[1] += move_dir[1] * speed * dt
+        OGL.glTranslatef(move_dir[0] * speed * dt,0, move_dir[1] * speed * dt)

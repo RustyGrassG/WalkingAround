@@ -49,14 +49,15 @@ class Cube(GameObject):
     
     def draw(self):
         #Quads
-        #GL.glBegin(GL.GL_QUADS)
+        GL.glColor3fv(self.color)
+        px,py,pz = self.pos
+
+        vert_trans = [(vx + px, vy + py, vz + pz) for vx, vy, vz in self.vertices]
+
         for surface in self.surfaces:
-            x = 0
             for vertex in surface:
-                x += 1
-                updated_vert_pos = (self.vertices[vertex][0] + self.pos[0], self.vertices[vertex][1] + self.pos[1] , self.vertices[vertex][2] + self.pos[2])
-                GL.glColor3fv(self.color)
-                GL.glVertex3fv(updated_vert_pos)
+                #GL.glColor3fv(self.color)
+                GL.glVertex3fv(vert_trans[vertex])
                 #print(updated_vert_pos)
         #GL.glEnd()
         #Lines

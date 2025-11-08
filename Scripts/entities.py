@@ -12,6 +12,7 @@ class Player():
     def __init__(self, pos : list = [0.0, 0.0, 0.0]):
         self.stats = {
             "walk_speed" : 10.0,
+            "run_speed" : 15.0,
             "height" : -1.8,
             "mouse_sensitivity": 8.0
         }
@@ -38,8 +39,12 @@ class Player():
         forward = [-math.sin(rot_radians), math.cos(rot_radians)]
         right = [math.cos(rot_radians), math.sin(rot_radians)]
 
-        #gets the player walk speed from dic
+        #gets the player move speed from dic
         speed = self.stats["walk_speed"]
+        #changes to run speed if run key is held down
+        if keys[pygame.K_LSHIFT]:
+            speed = self.stats["run_speed"]
+        
         move_dir = [0, 0]
         if keys[pygame.K_w]:
             move_dir[0] += forward[0]

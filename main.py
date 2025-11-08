@@ -75,6 +75,7 @@ class main():
 
         glMatrixMode(GL_MODELVIEW)
         gluLookAt(0, .01, 0, 0, 0, 0, 0, 0, .01)
+        glTranslatef(0, 0, self.player.stats["height"])
         self.viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
         
         

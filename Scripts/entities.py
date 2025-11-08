@@ -12,7 +12,7 @@ class Player():
     def __init__(self, pos : list = [0.0, 0.0, 0.0]):
         self.stats = {
             "walk_speed" : 10.0,
-            "height" : -100.0,
+            "height" : -1.8,
             "mouse_sensitivity": 8.0
         }
         self.up_down_angle = 0.0

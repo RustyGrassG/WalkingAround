@@ -2,6 +2,7 @@ import sys
 import Scripts
 import pygame
 import math
+from objloader import *
 from random import uniform
 from OpenGL.GL import  *
 from OpenGL.GLU import *

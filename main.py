@@ -140,15 +140,17 @@ class main():
                     if event.key == pygame.K_ESCAPE:
                         pygame.quit()
                         return
-                    if event.key == pygame.K_SPACE:
-                        x = uniform(-100.0, 100.0)
-                        y = uniform(-100.0, 100.0)
-                        z = uniform(-100.0, 100.0)
-                        #Set Cube stats here! Only size, position, and color works
-                        self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
-                        self.update_UI()
+                        
 
             key_presses = pygame.key.get_pressed()
+            #Debug will be removed
+            if key_presses[pygame.K_SPACE]:
+                x = uniform(-100.0, 100.0)
+                y = uniform(-100.0, 100.0)
+                z = uniform(-100.0, 100.0)
+                #Set Cube stats here! Only size, position, and color works
+                self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
+                self.update_UI()
             dx, dy = pygame.mouse.get_rel()
             
             glLoadIdentity()
@@ -181,10 +183,8 @@ class main():
             #refreshes the screen each tick
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             
-            glBegin(GL_QUADS)
             for game_object in self.objects:
                 game_object.draw()
-            glEnd()
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, 1)
             #pygame.display.get_surface().blit(self.text, self.displayCenter)

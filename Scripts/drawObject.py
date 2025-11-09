@@ -1,5 +1,6 @@
-import OpenGL.GL as GL
-import OpenGL.GLU as GLU
+from OpenGL.GL import *
+import numpy as np
+from OpenGL.arrays import vbo
 
 class GameObject():
     def __init__(self, size: float, pos: tuple = (0,0,0), color: tuple = (1,1,1), collisions: bool = False, show_edges = False):
@@ -13,64 +14,40 @@ class GameObject():
 class Cube(GameObject):
     def __init__(self, size: float = 1.0, pos: tuple = (0,0,0), color: tuple = (1,1,1), collisions: bool = False, show_edges = False):
         super().__init__(size, pos, color, collisions)
-        
-        self.vertices = (
-            (size, -size, -size),
-            (size, size, -size),
-            (-size, size, -size),
-            (-size, -size, -size),
-            (size, -size, size),
-            (size, size, size),
-            (-size, -size, size),
-            (-size, size, size)
-        )
-        self.edges = (
-            (0,1),
-            (0,3),
-            (0,4),
-            (2,1),
-            (2,3),
-            (2,7),
-            (6,3),
-            (6,4),
-            (6,7),
-            (5,1),
-            (5,4),
-            (5,7)
-        )
-        self.surfaces = (
-            (0,1,2,3),
-            (3,2,7,6),
-            (6,7,5,4),
-            (4,5,1,0),
-            (1,5,7,2),
-            (4,0,3,6)
-        )
+        s = self.size
+
+        vertices = np.array([
+            # Front
+            [ s,  s, -s], [-s,  s, -s], [-s, -s, -s], [ s, -s, -s],
+            # Back
+            [ s,  s,  s], [ s, -s,  s], [-s, -s,  s], [-s,  s,  s],
+            # Top
+            [ s,  s,  s], [-s,  s,  s], [-s,  s, -s], [ s,  s, -s],
+            # Bottom
+            [ s, -s,  s], [ s, -s, -s], [-s, -s, -s], [-s, -s,  s],
+            # Left
+            [-s,  s,  s], [-s, -s,  s], [-s, -s, -s], [-s,  s, -s],
+            # Right
+            [ s,  s,  s], [ s,  s, -s], [ s, -s, -s], [ s, -s,  s],
+        ], dtype=np.float32)
+
+        self.vertex_count = len(vertices)
+        self.vbo = vbo.VBO(vertices)
     
     def draw(self):
-        #Quads
-        GL.glColor3fv(self.color)
-        px,py,pz = self.pos
+        glPushMatrix()
+        glTranslatef(*self.pos)
+        glColor3fv(self.color)
 
-        vert_trans = [(vx + px, vy + py, vz + pz) for vx, vy, vz in self.vertices]
+        self.vbo.bind()
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glVertexPointer(3, GL_FLOAT, 0, self.vbo)
 
-        for surface in self.surfaces:
-            for vertex in surface:
-                #GL.glColor3fv(self.color)
-                GL.glVertex3fv(vert_trans[vertex])
-                #print(updated_vert_pos)
-        #GL.glEnd()
-        #Lines
-        if self.show_edges:
-            print("debug")
-            GL.glBegin(GL.GL_LINES)
-            for edge in self.edges:
-                x = 0
-                for vertice in edge:
-                    updated_vert_pos = (vertice, vertice, vertice)
-                    GL.glVertex3fv(updated_vert_pos)
-                    x += 1
-            GL.glEnd()
+        glDrawArrays(GL_QUADS, 0, self.vertex_count)
+
+        glDisableClientState(GL_VERTEX_ARRAY)
+        self.vbo.unbind()
+        glPopMatrix()
         
 
 class Sphere(GameObject):

@@ -12,13 +12,14 @@ class Player():
     def __init__(self, pos : list = [0.0, 0.0, 0.0]):
         self.stats = {
             "walk_speed" : 10.0,
-            "run_speed" : 15.0,
+            "run_speed" : 18.0,
             "height" : -1.8,
             "mouse_sensitivity": 8.0
         }
         self.up_down_angle = 0.0
         self.left_right_angle = 0.0
         self.viewMatrix = OGL.glGetFloatv(OGL.GL_MODELVIEW_MATRIX)
+        self.is_moving = False
         
     
     def update_camera(self, dx, dy, center, dt):
@@ -32,6 +33,7 @@ class Player():
         OGL.glRotatef(self.left_right_angle, 0.0, 1.0, 0.0)
     
     def update_pos(self, keys, dt):
+        self.is_moving = False
         #Takes the horizontal(yaw) camera angle, in degrees, and converts it to radians
         rot_radians = math.radians(self.left_right_angle)
 
@@ -64,5 +66,7 @@ class Player():
         if move_norm:
             move_dir[0] /= move_norm
             move_dir[1] /= move_norm
+        if move_dir[0] or move_dir[1]:
+            self.is_moving = True
 
         OGL.glTranslatef(move_dir[0] * speed * dt,0, move_dir[1] * speed * dt)

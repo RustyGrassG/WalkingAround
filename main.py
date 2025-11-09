@@ -8,6 +8,7 @@ from OpenGL.GLU import *
 import Scripts.drawObject as drawObject, Scripts.entities as entities, Scripts.utils as utils
 from pygame import locals as pylocals
 import numpy as np
+from Scripts.drawObject import Cube
 
 
 
@@ -183,8 +184,18 @@ class main():
             #refreshes the screen each tick
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             
-            for game_object in self.objects:
-                game_object.draw()
+            glPushMatrix()
+            Cube.shared_vbo.bind()
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glVertexPointer(3, GL_FLOAT, 0, Cube.shared_vbo)
+
+            for cube in self.objects:
+                cube.draw()
+            
+            glDisableClientState(GL_VERTEX_ARRAY)
+            Cube.shared_vbo.unbind()
+            glPopMatrix()
+
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, 1)
             #pygame.display.get_surface().blit(self.text, self.displayCenter)

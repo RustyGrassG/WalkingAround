@@ -21,13 +21,12 @@ def surf_to_texture( surface, texID):
         width, height = surface.get_size()
         surface_array = pygame.surfarray.pixels3d(surface)
         surface_array = np.flipud(surface_array)
-        rgb_surface = surface_array.swapaxes(0, 1).astype(np.uint8).tobytes()
+        #rgb_surface = surface_array.swapaxes(0, 1).astype(np.uint8).tobytes()
         flipped_surf = pygame.transform.flip(surface, False, True)
         texture_data = pygame.image.tobytes(flipped_surf, "RGBA", True)
 
         glBindTexture(GL_TEXTURE_2D, texID)
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture_data)
-        glBindTexture(GL_TEXTURE_2D, 0)
 
 def draw_ui_overlay(size, texID):
         glMatrixMode(GL_PROJECTION)

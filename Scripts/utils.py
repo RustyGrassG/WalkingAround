@@ -28,6 +28,23 @@ def surf_to_texture( surface, texID):
         glBindTexture(GL_TEXTURE_2D, texID)
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, texture_data)
 
+
+def check_collisions(col_a, col_b, padding = 1.0):
+      #print("Col_a:" + str(col_a) + " - Col_b: " + str(col_b))
+
+      x_overlap = (col_a[0] - padding < col_b[3] + padding) and (col_a[3] + padding > col_b[0] - padding)
+      y_overlap = (col_a[1] - padding < col_b[4] + padding) and (col_a[4] + padding > col_b[1] - padding)
+      z_overlap = (col_a[2] - padding < col_b[5] + padding) and (col_a[5] + padding > col_b[2] - padding)
+
+      if not x_overlap:
+            return False
+      if not y_overlap:
+            return False
+      if not z_overlap:
+            return False
+
+      return True
+
 def draw_ui_overlay(size, texID):
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()

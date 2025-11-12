@@ -23,22 +23,32 @@ def create_cube_vbo(size=1.0):
 
 
 class GameObject():
-    def __init__(self, size: float, pos: tuple = (0,0,0), color: tuple = (1,1,1), collisions: bool = False, show_edges = False):
+    def __init__(self, size: float, pos: list = [0,0,0], color: tuple = (1,1,1), collidable: bool = False, show_edges = False):
         self.size = size
         self.pos = np.array(pos, dtype=np.float32)
         self.color = color
-        self.collisions = collisions
+        self.collidable = collidable
         self.debug = True
         self.show_edges = show_edges
+        self.aabb = self.calculate_aabb()
+    
+    def calculate_aabb(self):
+        half_size = 1 / 2.0
+        print("BOX: " + str(self.pos))
+        min_coords = [p-half_size for p in self.pos]
+        max_coords = [p+half_size for p in self.pos]
+
+        return min_coords + max_coords
 
 class Cube(GameObject):
     shared_vbo = None
     vertex_count = 0
 
-    def __init__(self, size: float = 1.0, pos: tuple = (0,0,0), color: tuple = (1,1,1), collisions: bool = False, show_edges = False):
-        super().__init__(size, pos, color, collisions)
+    def __init__(self, size: float = 1.0, pos: list = [0,0,0], color: tuple = (1,1,1), collidable: bool = False, show_edges = False):
+        super().__init__(size, pos, color, collidable)
         if Cube.shared_vbo is None:
             Cube.shared_vbo, Cube.vertex_count = create_cube_vbo(size)
+    
         
     
     def draw(self):
@@ -47,6 +57,7 @@ class Cube(GameObject):
         glColor3fv(self.color)
         glDrawArrays(GL_QUADS, 0, Cube.vertex_count)
         glPopMatrix()
+        #print("Drawing")
         
 
 class Sphere(GameObject):

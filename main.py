@@ -75,7 +75,7 @@ class main():
             y_pos = math.sin(pos_i)
             #Set Cube stats here! Only size, position, and color works
             #self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
-            self.objects.append(drawObject.Cube(pos = (x_pos * 10, y_pos * 10, 0), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.75, 1.0)))
+            self.objects.append(drawObject.Cube(pos = (x_pos * 10, y_pos * 10, 0), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = 1.0, collidable=True))
         
 
         glMatrixMode(GL_PROJECTION)
@@ -168,7 +168,7 @@ class main():
             glPushMatrix()
 
             glLoadIdentity()           
-            self.player.update_pos(key_presses,dt)
+            self.player.update_pos(key_presses,dt, self.viewMatrix)
 
             glMultMatrixf(self.viewMatrix)
             self.viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
@@ -185,8 +185,15 @@ class main():
             Cube.shared_vbo.bind()
             glEnableClientState(GL_VERTEX_ARRAY)
             glVertexPointer(3, GL_FLOAT, 0, Cube.shared_vbo)
-
+    
+            player_aabb = self.player.calculate_aabb()
+            self.player.is_colliding = False
             for cube in self.objects:
+                if cube.collidable:
+                    cube_aabb = cube.aabb
+                        
+                    self.player.is_colliding = utils.check_collisions(player_aabb, cube_aabb)
+                    print(self.player.is_colliding)
                 cube.draw()
             
             glDisableClientState(GL_VERTEX_ARRAY)

@@ -193,7 +193,7 @@ class main():
                     cube_aabb = cube.aabb
                         
                     self.player.is_colliding = utils.check_collisions(player_aabb, cube_aabb)
-                    print(self.player.is_colliding)
+                    #print(self.player.is_colliding)
                 cube.draw()
             
             glDisableClientState(GL_VERTEX_ARRAY)

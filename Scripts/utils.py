@@ -30,7 +30,7 @@ def surf_to_texture( surface, texID):
 
 
 def check_collisions(col_a, col_b, padding = 1.0):
-      #print("Col_a:" + str(col_a) + " - Col_b: " + str(col_b))
+      print("Col_a:" + str(col_a) + " - Col_b: " + str(col_b))
 
       x_overlap = (col_a[0] - padding < col_b[3] + padding) and (col_a[3] + padding > col_b[0] - padding)
       y_overlap = (col_a[1] - padding < col_b[4] + padding) and (col_a[4] + padding > col_b[1] - padding)

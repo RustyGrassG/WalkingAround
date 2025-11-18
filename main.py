@@ -11,6 +11,9 @@ from pygame import locals as pylocals
 import numpy as np
 from Scripts.drawObject import Cube
 
+# Global: number of cubes to create at startup. Change this value to start with X cubes.
+STARTING_CUBES = 4
+
 
 
 class main():
@@ -60,16 +63,17 @@ class main():
         #Holds all the objects in the world
         self.objects = []
 
-        for i in range(1,5):
-            x = uniform(-100.0, 100.0)
-            y = uniform(-100.0, 100.0)
-            z = uniform(-100.0, 100.0)
-            pos_i = (math.pi * 2) / 4 * i
-            x_pos = math.cos(pos_i)
-            y_pos = math.sin(pos_i)
-            #Set Cube stats here! Only size, position, and color works
-            #self.objects.append(drawObject.Cube(pos = (x, y, z), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.25, 2.5)))
-            self.objects.append(drawObject.Cube(pos = (x_pos * 10, y_pos * 10, 0), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.75, 1.0)))
+        # Create STARTING_CUBES cubes at startup. Uses a circular layout like the original.
+        if STARTING_CUBES > 0:
+            for i in range(STARTING_CUBES):
+                x = uniform(-100.0, 100.0)
+                y = uniform(-100.0, 100.0)
+                z = uniform(-100.0, 100.0)
+                pos_i = (math.pi * 2) / STARTING_CUBES * i
+                x_pos = math.cos(pos_i)
+                y_pos = math.sin(pos_i)
+                #Set Cube stats here! Only size, position, and color works
+                self.objects.append(drawObject.Cube(pos = (x_pos * 10, y_pos * 10, 0), color= (x/(x+y+z), y/(x+y+z), z/(x+y+z)), size = uniform(0.75, 1.0)))
         
 
         glMatrixMode(GL_PROJECTION)

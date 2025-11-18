@@ -5,6 +5,8 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
+	"os/signal"
 	"runtime"
 	"time"
 
@@ -16,6 +18,12 @@ import (
 const (
 	windowWidth  = 800
 	windowHeight = 600
+	// Global: number of cubes to create at startup. Change to start with X cubes.
+	startingCubes = 40000
+	// Horizontal radius (in world units) to spread starting cubes around the player
+	startingSpreadRadius = 120.0
+	// Vertical range (total extent) for starting cubes. They will be placed in [-H/2, H/2]
+	startingHeightRange = 40.0
 )
 
 type Player struct {
@@ -54,12 +62,21 @@ func initGlfw() *glfw.Window {
 	}
 	window.MakeContextCurrent()
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+
+	// Close the window when Ctrl+C is pressed while the GLFW window has focus.
+	// Some environments may not send terminal SIGINT when the window is focused,
+	// so this provides an in-window fallback.
+	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if key == glfw.KeyC && mods&glfw.ModControl != 0 && action == glfw.Press {
+			w.SetShouldClose(true)
+		}
+	})
 	return window
 }
 
 func initOpenGL() {
 	if err := gl.Init(); err != nil {
-		log.Fatalln("failed to initialize glow:", err)
+		log.Fatalln("failed to initialize OpenGL:", err)
 	}
 	version := gl.GoStr(gl.GetString(gl.VERSION))
 	fmt.Println("OpenGL version", version)
@@ -130,7 +147,7 @@ func newProgram(vertexSrc, fragmentSrc string) (uint32, error) {
 	return prog, nil
 }
 
-func makeCubeVao() (uint32, int) {
+func makeCubeVao() (uint32, uint32, int) {
 	// 36 vertices (6 faces * 2 tris * 3 verts)
 	vertices := []float32{
 		// front
@@ -186,39 +203,64 @@ func makeCubeVao() (uint32, int) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, 4*len(vertices), gl.Ptr(vertices), gl.STATIC_DRAW)
 	gl.EnableVertexAttribArray(0)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+	// Use nil pointer for zero offset to avoid deprecated gl.PtrOffset
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.Ptr(nil))
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindVertexArray(0)
-	return vao, len(vertices) / 3
+	return vao, vbo, len(vertices) / 3
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
 	window := initGlfw()
 	defer glfw.Terminate()
+
+	// Create a local RNG so we don't rely on the global seed (avoids deprecated Seed usage)
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	// Inform the user how to quit and handle Ctrl+C (SIGINT) to close the window
+	fmt.Println("Press Ctrl+C to exit")
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	// Use a channel to notify the main thread to close the window.
+	// GLFW calls must be made on the main OS thread, so do not call
+	// window.SetShouldClose from the signal goroutine.
+	quitChan := make(chan struct{}, 1)
+	go func() {
+		<-sig
+		fmt.Println("SIGINT received — will close window")
+		close(quitChan)
+	}()
 	initOpenGL()
 
 	prog, err := newProgram(vertexShader, fragmentShader)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	vao, vertCount := makeCubeVao()
+	vao, vbo, vertCount := makeCubeVao()
 
-	// create some cubes (4 in a circle like original)
-	for i := 1; i <= 4; i++ {
-		posI := float64(i) * (2 * math.Pi) / 4.0
-		xPos := float32(math.Cos(posI) * 10.0)
-		yPos := float32(math.Sin(posI) * 10.0)
-		x := rand.Float32()*200 - 100
-		y := rand.Float32()*200 - 100
-		z := rand.Float32()*200 - 100
-		denom := x + y + z
+	// create some cubes (use startingCubes)
+	// spread them randomly across a wider area around the player
+	for i := 0; i < startingCubes; i++ {
+		// Choose a random point in a horizontal disk of radius startingSpreadRadius
+		theta := rng.Float64() * 2 * math.Pi
+		// sqrt(rand) gives uniform distribution over the disk area
+		r := startingSpreadRadius * math.Sqrt(rng.Float64())
+		x := float32(math.Cos(theta) * r)
+		z := float32(math.Sin(theta) * r)
+		// small vertical variation so cubes aren't all on the same plane
+		y := rng.Float32()*startingHeightRange - startingHeightRange/2
+
+		// color based on random values (keep previous style but independent of position)
+		rx := rng.Float32()
+		ry := rng.Float32()
+		rz := rng.Float32()
+		denom := rx + ry + rz
 		if denom == 0 {
 			denom = 1
 		}
-		color := mgl32.Vec3{float32(x) / float32(denom), float32(y) / float32(denom), float32(z) / float32(denom)}
-		cubes = append(cubes, Cube{Pos: mgl32.Vec3{xPos, yPos, 0}, Size: 0.9, Col: color})
+		color := mgl32.Vec3{rx / denom, ry / denom, rz / denom}
+		cubes = append(cubes, Cube{Pos: mgl32.Vec3{x, y, z}, Size: rng.Float32()*1.5 + 0.25, Col: color})
 	}
 
 	player := Player{
@@ -248,6 +290,14 @@ func main() {
 	colorLoc := gl.GetUniformLocation(prog, gl.Str("uColor\x00"))
 
 	for !window.ShouldClose() {
+		// If SIGINT was received, quitChan will be closed; handle it on the main thread.
+		select {
+		case <-quitChan:
+			window.SetShouldClose(true)
+		default:
+		}
+
+		// (cleanup will happen after the main loop exits)
 		// time
 		now := time.Now()
 		dt := float32(now.Sub(lastTime).Seconds())
@@ -274,10 +324,10 @@ func main() {
 
 		// movement
 		dir := mgl32.Vec3{0, 0, 0}
-		if window.GetKey(glfw.KeyW) == glfw.Press {
+		if window.GetKey(glfw.KeyS) == glfw.Press {
 			dir = dir.Add(mgl32.Vec3{0, 0, -1})
 		}
-		if window.GetKey(glfw.KeyS) == glfw.Press {
+		if window.GetKey(glfw.KeyW) == glfw.Press {
 			dir = dir.Add(mgl32.Vec3{0, 0, 1})
 		}
 		if window.GetKey(glfw.KeyA) == glfw.Press {
@@ -287,16 +337,21 @@ func main() {
 			dir = dir.Add(mgl32.Vec3{1, 0, 0})
 		}
 		if window.GetKey(glfw.KeySpace) == glfw.Press {
-			// spawn a random cube like original
-			x := rand.Float32()*200 - 100
-			y := rand.Float32()*200 - 100
-			z := rand.Float32()*200 - 100
-			denom := x + y + z
+			// spawn a random cube within the same spread radius
+			theta := rng.Float64() * 2 * math.Pi
+			r := startingSpreadRadius * math.Sqrt(rng.Float64())
+			sx := float32(math.Cos(theta) * r)
+			sz := float32(math.Sin(theta) * r)
+			sy := rng.Float32()*startingHeightRange - startingHeightRange/2
+			rx := rng.Float32()
+			ry := rng.Float32()
+			rz := rng.Float32()
+			denom := rx + ry + rz
 			if denom == 0 {
 				denom = 1
 			}
-			color := mgl32.Vec3{x / denom, y / denom, z / denom}
-			cubes = append(cubes, Cube{Pos: mgl32.Vec3{x, y, z}, Size: rand.Float32()*2.25 + 0.25, Col: color})
+			color := mgl32.Vec3{rx / denom, ry / denom, rz / denom}
+			cubes = append(cubes, Cube{Pos: mgl32.Vec3{sx, sy, sz}, Size: rng.Float32()*2.25 + 0.25, Col: color})
 		}
 
 		// build forward/right vectors from yaw/pitch
@@ -348,4 +403,9 @@ func main() {
 			fpsTimer = time.Now()
 		}
 	}
+
+	// Cleanup GL resources (delete after the render loop exits)
+	gl.DeleteProgram(prog)
+	gl.DeleteBuffers(1, &vbo)
+	gl.DeleteVertexArrays(1, &vao)
 }
